@@ -5,7 +5,7 @@
 $host = "localhost";
 $user = "root"; // Update if different
 $password = ""; // Update if different
-$dbname = "intrance_prep_app"; // Update to your actual database name
+$dbname = "intrance_prep_app"; 
 
 // Create a new MySQLi connection
 $conn = new mysqli($host, $user, $password, $dbname);
@@ -17,42 +17,46 @@ if ($conn->connect_error) {
 
 // Retrieve the 'course' parameter from the URL
 $courseSlug = $_GET['course'] ?? '';
-$type       = $_GET['type']   ?? 'quiz';          // quiz | material
+$type       = $_GET['type']   ?? 'quiz'; // quiz | material
 
-
-// Convert slug to course name (e.g., 'computer-science' to 'Computer Science')
+// Convert slug to course name (e.g., 'biology' -> 'Biology')
 $courseName = ucwords(str_replace('-', ' ', $courseSlug));
 
-// Prepare a statement to fetch the course ID based on the course name
+// Fetch course ID
 $stmt = $conn->prepare("SELECT id FROM courses WHERE name = ?");
+if (!$stmt) {
+    die("Prepare failed: " . $conn->error);
+}
 $stmt->bind_param("s", $courseName);
 $stmt->execute();
 $result = $stmt->get_result();
 
-// Check if the course exists
-if ($result->num_rows > 0) {
+if ($result && $result->num_rows > 0) {
     $course = $result->fetch_assoc();
-    $courseId = $course['id'];
+    $courseId = intval($course['id']);
 
-    // Prepare a statement to fetch topics associated with the course ID
+    // Fetch topics for the course
     $stmt = $conn->prepare("SELECT title FROM course_titles WHERE course_id = ?");
+    if (!$stmt) {
+        die("Prepare failed: " . $conn->error);
+    }
     $stmt->bind_param("i", $courseId);
     $stmt->execute();
     $topicsResult = $stmt->get_result();
 
-    // Fetch all topics into an array
     $topics = [];
-    while ($row = $topicsResult->fetch_assoc()) {
-        $topics[] = $row['title'];
+    if ($topicsResult) {
+        while ($row = $topicsResult->fetch_assoc()) {
+            $topics[] = $row['title'];
+        }
     }
 } else {
-    // If the course is not found, display an error message
     die("Course not found.");
 }
 
-// Close the database connection
 $conn->close();
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">
