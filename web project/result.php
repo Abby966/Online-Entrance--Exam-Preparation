@@ -4,6 +4,7 @@ include "db.php";
 $year = $_POST['year'];
 $stream = $_POST['stream'];
 $subject = $_POST['subject'];
+$time_taken = $_POST['time_taken'];  // total seconds
 
 $sql = "SELECT * FROM entrance_questions 
         WHERE year='$year' AND stream='$stream' AND subject='$subject'";
@@ -18,6 +19,11 @@ while ($q = $questions->fetch_assoc()) {
         $score++;
     }
 }
+
+// format time
+$minutes = floor($time_taken / 60);
+$seconds = $time_taken % 60;
+$formatted_time = sprintf("%02d:%02d", $minutes, $seconds);
 ?>
 <!DOCTYPE html>
 <html>
@@ -25,7 +31,9 @@ while ($q = $questions->fetch_assoc()) {
 <body>
 
 <h2>Result – <?php echo $subject; ?> (<?php echo $year; ?>)</h2>
-<h3>You scored: <?php echo $score; ?> / <?php echo $total; ?></h3>
+
+<h3>Your Score: <?php echo $score; ?> / <?php echo $total; ?></h3>
+<h3>Time Taken: <?php echo $formatted_time; ?></h3>
 
 <a href="exam.php"><button>Take Another Exam</button></a>
 
